@@ -1,0 +1,8 @@
+node_modules/
+config.json
+state/
+*.log
+dsh/*.generated.yml
+*-qq-bridge.cmd
+!stop-qq-bridge.cmd
+!install.cmd

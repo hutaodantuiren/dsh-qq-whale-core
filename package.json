@@ -1,0 +1,20 @@
+{
+  "name": "dsh-qq-whale",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "DeepSeek 小鲸鱼 QQ 桥接：SnowLuma (OneBot v11) ↔ DeepSeek Harness SDK 运行时，内置鲸鱼娘人格、二代仿真提示词、群管理与余额能力。",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "start": "node src/main.js",
+    "setup": "node scripts/setup.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "test": "node --test tests/unit.test.mjs tests/bridge.test.mjs tests/features.test.mjs",
+    "test:e2e": "node tests/e2e.mjs",
+    "learn:slang": "node scripts/learn-slang.mjs",
+    "hunt:avatar": "node scripts/avatar-hunt.mjs"
+  }
+}

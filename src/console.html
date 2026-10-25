@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小鲸鱼 QQ 桥接控制台</title>
+<style>
+  :root {
+    --bg: #0b1020; --panel: #121a2e; --panel2: #0f1628; --line: #22304d;
+    --text: #dce6ff; --muted: #8595b8; --blue: #5aa9ff; --cyan: #63e6ff;
+    --green: #5ce0a0; --red: #ff6b81; --amber: #ffcc66;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: radial-gradient(1200px 600px at 80% -10%, #16305e 0%, var(--bg) 55%); color: var(--text); font: 14px/1.6 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif; }
+  header { padding: 16px 24px 0; border-bottom: 1px solid var(--line); }
+  .head { display: flex; align-items: center; gap: 14px; padding-bottom: 12px; }
+  .logo { width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, var(--blue), var(--cyan)); display: grid; place-items: center; font-size: 20px; }
+  h1 { font-size: 17px; margin: 0; font-weight: 600; letter-spacing: .5px; }
+  .sub { color: var(--muted); font-size: 12px; }
+  .spacer { flex: 1; }
+  .pill { padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; color: var(--muted); }
+  .pill.ok { color: var(--green); border-color: #2a5a48; background: #10251e; }
+  .pill.bad { color: var(--red); border-color: #5a2a34; background: #251016; }
+  nav.tabs { display: flex; gap: 4px; overflow: auto; }
+  nav.tabs button { background: transparent; border: none; border-bottom: 2px solid transparent; border-radius: 0; padding: 9px 14px; color: var(--muted); }
+  nav.tabs button.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+  main { padding: 18px 24px 40px; max-width: 1280px; margin: 0 auto; }
+  .tabpane { display: none; }
+  .tabpane.active { display: block; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .card { background: linear-gradient(180deg, var(--panel), var(--panel2)); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .card .label { color: var(--muted); font-size: 12px; letter-spacing: .4px; }
+  .card .value { font-size: 22px; font-weight: 650; margin-top: 4px; }
+  .card .hint { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; margin-bottom: 16px; overflow: hidden; }
+  section > h2 { font-size: 14px; margin: 0; padding: 13px 16px; border-bottom: 1px solid var(--line); color: #b9c9ea; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  section > h2 .spacer { flex: 1; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #1b2740; font-size: 13px; vertical-align: middle; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #16203a; }
+  .mono { font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; }
+  .tag { display: inline-block; padding: 1px 7px; border-radius: 6px; background: #1b2a4a; color: #9dc0ff; font-size: 11px; }
+  .tag.ok { background: #123026; color: var(--green); }
+  .tag.warn { background: #332813; color: var(--amber); }
+  .tag.bad { background: #33141c; color: var(--red); }
+  button, select, input, textarea {
+    background: #16213b; color: var(--text); border: 1px solid #2a3b5f; border-radius: 8px;
+    padding: 6px 10px; font: inherit; font-size: 12px; outline: none;
+  }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--blue); background: #1b2b4b; }
+  button.primary { background: linear-gradient(135deg, #2b6fd8, #3b8ef0); border-color: transparent; }
+  button.danger { color: var(--red); border-color: #4a2732; }
+  textarea { width: 100%; min-height: 240px; resize: vertical; font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; line-height: 1.55; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .logs { max-height: 420px; overflow: auto; padding: 10px 14px; font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; color: #a9b9d8; background: #0b1222; }
+  .logs div { padding: 2px 0; white-space: pre-wrap; word-break: break-all; }
+  .logs .warn { color: var(--amber); }
+  .logs .error { color: var(--red); }
+  .detail { padding: 12px 16px; color: var(--muted); }
+  .msgs { max-height: 340px; overflow: auto; padding: 8px 14px 14px; }
+  .msg { padding: 6px 0; border-bottom: 1px dashed #1b2740; font-size: 13px; }
+  .msg .who { color: var(--cyan); font-size: 12px; margin-right: 8px; }
+  .msg.self .who { color: var(--amber); }
+  .empty { color: var(--muted); padding: 18px 16px; }
+  .foot { color: #5e6f92; font-size: 12px; text-align: center; margin-top: 18px; }
+  .chart { display: flex; align-items: flex-end; gap: 3px; height: 150px; padding: 12px 16px 4px; }
+  .chart .bar { flex: 1; min-width: 4px; background: linear-gradient(180deg, var(--cyan), #2b6fd8); border-radius: 3px 3px 0 0; position: relative; }
+  .chart .bar span { position: absolute; bottom: -18px; left: 0; right: 0; text-align: center; font-size: 9px; color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+  .persona-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .kv { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dashed #1b2740; font-size: 13px; }
+  .kv:last-child { border-bottom: none; }
+  .good { color: var(--green); } .bad { color: var(--red); } .muted { color: var(--muted); }
+  .think { padding: 12px 16px; border-bottom: 1px solid #1b2740; }
+  .think:last-child { border-bottom: none; }
+  .think .top { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+  .think pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; line-height: 1.6; color: #a9b9d8; background: #0b1222; border: 1px solid #1b2740; border-radius: 8px; padding: 10px 12px; max-height: 320px; overflow: auto; }
+  .think.grudge { background: linear-gradient(90deg, #2a1018, transparent 60%); border-left: 3px solid var(--red); }
+</style>
+</head>
+<body>
+<header>
+  <div class="head">
+    <div class="logo">🐳</div>
+    <div>
+      <h1>DeepSeek 小鲸鱼 · QQ 桥接控制台</h1>
+      <div class="sub" id="sub">SnowLuma OneBot v11 ↔ DeepSeek Harness SDK</div>
+    </div>
+    <div class="spacer"></div>
+    <span class="pill" id="pill-snow">SnowLuma …</span>
+    <span class="pill" id="pill-dsh">DSH …</span>
+    <button id="btn-refresh">刷新</button>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="overview" class="active">总览</button>
+    <button data-tab="chats">会话</button>
+    <button data-tab="whitelist">白名单</button>
+    <button data-tab="persona">人格</button>
+    <button data-tab="cost">花费</button>
+    <button data-tab="audit">审计</button>
+    <button data-tab="thinking">思考</button>
+    <button data-tab="ext">扩展</button>
+    <button data-tab="logs">日志</button>
+  </nav>
+</header>
+<main>
+  <div class="tabpane active" id="tab-overview">
+    <div class="cards">
+      <div class="card"><div class="label">当前账号</div><div class="value" id="v-account">—</div><div class="hint" id="v-account-hint">等待连接</div></div>
+      <div class="card"><div class="label">DSH 余额</div><div class="value" id="v-balance">—</div><div class="hint" id="v-balance-hint">来自 .dshw-usage.json</div></div>
+      <div class="card"><div class="label">今日桥接花费</div><div class="value" id="v-cost">—</div><div class="hint">按 config.pricing 估算</div></div>
+      <div class="card"><div class="label">会话 / 归档</div><div class="value" id="v-chats">0</div><div class="hint" id="v-chats-hint">群聊 / 私聊</div></div>
+    </div>
+    <section><h2>运行信息</h2><div class="detail" id="info"></div></section>
+    <section><h2>最近会话</h2><div id="overview-chats"></div></section>
+  </div>
+
+  <div class="tabpane" id="tab-chats">
+    <section><h2>会话与唤醒</h2><div id="chat-area"><div class="empty">暂无会话。</div></div></section>
+  </div>
+
+  <div class="tabpane" id="tab-whitelist">
+    <div class="cards">
+      <div class="card"><div class="label">主人 QQ</div><div class="value" id="wl-owner">—</div><div class="hint">主人私聊始终放行</div></div>
+      <div class="card"><div class="label">群聊白名单</div><div class="value" id="wl-group-count">0</div><div class="hint">只响应名单内的群</div></div>
+      <div class="card"><div class="label">私聊白名单</div><div class="value" id="wl-private-count">0</div><div class="hint">只响应名单内的私聊</div></div>
+      <div class="card"><div class="label">空名单策略</div><div class="value" id="wl-empty">—</div><div class="hint">allowAllWhenEmpty</div></div>
+    </div>
+    <div class="grid2">
+      <section><h2>白名单群聊</h2>
+        <div class="detail" style="padding-bottom:0">
+          <div class="row"><input id="wl-group-input" placeholder="输入群号，例如 1085086913" style="flex:1"><button class="primary" id="wl-group-add">添加</button></div>
+        </div>
+        <div id="wl-groups"></div>
+      </section>
+      <section><h2>白名单私聊</h2>
+        <div class="detail" style="padding-bottom:0">
+          <div class="row"><input id="wl-private-input" placeholder="输入 QQ 号，例如 3351107931" style="flex:1"><button class="primary" id="wl-private-add">添加</button></div>
+        </div>
+        <div id="wl-privates"></div>
+      </section>
+    </div>
+    <section><h2>说明</h2><div class="detail">白名单改动会立即生效并写回 config.json，不需要重启。主人私聊不受白名单限制；如果两个名单都为空且 <span class="mono">allowAllWhenEmpty=false</span>，机器人不会响应任何消息。移除当前正在聊的群/私聊后，新消息会被忽略。</div></section>
+  </div>
+
+  <div class="tabpane" id="tab-persona">
+    <section>
+      <h2>人格 / 仿真提示词 <span class="spacer"></span><span class="muted" style="font-size:12px">保存后自动重新合成 AGENTS.md、重生成 patch，并重置所有 DSH 会话</span></h2>
+      <div class="persona-tools" style="padding:12px 16px 0">
+        <button class="primary" data-save="role-card.md">保存角色卡</button>
+        <button data-save="simulation.md">保存仿真协议</button>
+        <button data-save="system.md">保存 system prompt</button>
+        <button id="persona-reload">重新加载</button>
+      </div>
+      <div style="padding:0 16px 16px">
+        <label class="muted">角色卡 role-card.md</label>
+        <textarea id="prompt-role" spellcheck="false"></textarea>
+        <label class="muted">仿真协议 simulation.md</label>
+        <textarea id="prompt-sim" spellcheck="false"></textarea>
+        <label class="muted">system prompt system.md</label>
+        <textarea id="prompt-system" style="min-height:120px" spellcheck="false"></textarea>
+      </div>
+    </section>
+  </div>
+
+  <div class="tabpane" id="tab-cost">
+    <div class="cards">
+      <div class="card"><div class="label">累计估算</div><div class="value" id="cost-total">—</div><div class="hint">按 config.pricing</div></div>
+      <div class="card"><div class="label">今日</div><div class="value" id="cost-today">—</div><div class="hint">桥接自己的回合</div></div>
+      <div class="card"><div class="label">回合数</div><div class="value" id="cost-turns">—</div><div class="hint">已记录</div></div>
+      <div class="card"><div class="label">缓存命中输入</div><div class="value" id="cost-hit">—</div><div class="hint">tokens</div></div>
+    </div>
+    <section><h2>最近 24 小时花费</h2><div class="chart" id="cost-chart"></div><div style="height:22px"></div></section>
+    <section><h2>逐群花费</h2><div id="cost-chats"></div></section>
+  </div>
+
+  <div class="tabpane" id="tab-audit">
+    <section><h2>工具调用审计 <span class="spacer"></span><span class="muted" style="font-size:12px">最近 100 条</span></h2><div id="audit-area"><div class="empty">暂无记录</div></div></section>
+  </div>
+
+  <div class="tabpane" id="tab-thinking">
+    <section>
+      <h2>小鲸鱼思考过程 <span class="spacer"></span>
+        <select id="thinking-filter">
+          <option value="all">全部</option>
+          <option value="grudge">大肥鱼触发</option>
+          <option value="auto">自动结束潜水</option>
+        </select>
+      </h2>
+      <div id="thinking-area"><div class="empty">还没有思考记录；等小鲸鱼回一轮话。</div></div>
+    </section>
+  </div>
+
+  <div class="tabpane" id="tab-ext">
+    <div class="grid2">
+      <section><h2>表情包 <span class="spacer"></span><button id="sticker-hunt">立即冲浪</button></h2><div id="ext-stickers"><div class="empty">暂无</div></div></section>
+      <section><h2>头像 <span class="spacer"></span><button id="avatar-change">立即换</button></h2><div id="ext-avatar"><div class="empty">暂无</div></div></section>
+    </div>
+    <div class="grid2">
+      <section><h2>好感度 / 关系</h2><div id="ext-relations"><div class="empty">暂无</div></div></section>
+      <section><h2>小鲸鱼日记</h2><div id="ext-diary"><div class="empty">暂无</div></div></section>
+    </div>
+    <section><h2>图片 / 文件归档</h2><div id="ext-archive"><div class="empty">暂无</div></div></section>
+  </div>
+
+  <div class="tabpane" id="tab-logs">
+    <section><h2>最近日志</h2><div class="logs" id="logs"><div>加载中…</div></div></section>
+  </div>
+
+  <div class="foot">令牌保存在本机 state/bridge-token；控制台只监听回环地址。</div>
+</main>
+<script>
+const qs = new URLSearchParams(location.search);
+let token = qs.get('token') || localStorage.getItem('qq-bridge-token') || '';
+if (token) localStorage.setItem('qq-bridge-token', token);
+if (!token) {
+  token = prompt('请输入控制台令牌（启动日志 / state/bridge-token）') || '';
+  if (token) localStorage.setItem('qq-bridge-token', token);
+}
+const state = { data: null, tab: 'overview', prompts: null, usage: null, audit: null, diary: null, whitelist: null };
+let lastLogCount = 0;
+
+async function rpc(method, params = {}) {
+  const res = await fetch('/rpc', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-bridge-token': token },
+    body: JSON.stringify({ method, params }),
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || '请求失败');
+  return data.result;
+}
+function esc(text) { return String(text ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function fmtTime(ts) { if (!ts) return '—'; const d = new Date(ts); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+function fmtBytes(n) { n = Number(n) || 0; if (n > 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + ' MB'; if (n > 1024) return (n / 1024).toFixed(0) + ' KB'; return n + ' B'; }
+function fmtDuration(ms) { const m = Math.floor(ms / 60000); if (m < 60) return `${m} 分钟`; return `${Math.floor(m / 60)} 小时 ${m % 60} 分`; }
+
+function renderOverview() {
+  const d = state.data; if (!d) return;
+  document.getElementById('pill-snow').textContent = d.snowluma.connected ? 'SnowLuma 已连接' : 'SnowLuma 未连接';
+  document.getElementById('pill-snow').className = 'pill ' + (d.snowluma.connected ? 'ok' : 'bad');
+  document.getElementById('pill-dsh').textContent = d.dsh.ready ? 'DSH 已就绪' : 'DSH 未就绪';
+  document.getElementById('pill-dsh').className = 'pill ' + (d.dsh.ready ? 'ok' : 'bad');
+  document.getElementById('sub').textContent = `运行 ${fmtDuration(d.uptimeMs)} · ${d.dsh.model} · ${d.dsh.profile}`;
+  document.getElementById('v-account').textContent = d.snowluma.nickname || '未登录';
+  document.getElementById('v-account-hint').textContent = d.snowluma.selfId ? `QQ ${d.snowluma.selfId} · ${d.snowluma.connected ? '在线' : '离线'}` : '等待 SnowLuma';
+  document.getElementById('v-balance').textContent = d.balance?.text || '未知';
+  document.getElementById('v-balance-hint').textContent = d.balance?.updatedAt ? `更新于 ${new Date(d.balance.updatedAt).toLocaleString()}` : 'DSH 尚未写入余额缓存';
+  document.getElementById('v-cost').textContent = '¥' + Number(d.usage?.today || 0).toFixed(3);
+  const archiveTotal = d.extensions?.archive?.total || 0;
+  document.getElementById('v-chats').textContent = `${d.chats.length} / ${archiveTotal}`;
+  document.getElementById('v-chats-hint').textContent = `${d.chats.filter(c => c.kind === 'group').length} 群 · ${d.chats.filter(c => c.kind === 'private').length} 私聊`;
+  document.getElementById('info').innerHTML = `
+    <div class="row" style="gap:24px;flex-wrap:wrap">
+      <div>DSH 命令：<span class="mono">${esc(d.dsh.command)}</span></div>
+      <div>Patch：<span class="mono">${esc(d.dsh.patch)}</span></div>
+      <div>OneBot HTTP：<span class="mono">${esc(d.snowluma.httpUrl)}</span></div>
+      <div>OneBot WS：<span class="mono">${esc(d.snowluma.wsUrl)}</span></div>
+    </div>
+    <div style="margin-top:8px">累计：输入 ${d.usage?.totals?.input || 0} · 缓存命中 ${d.usage?.totals?.cacheRead || 0} · 输出 ${d.usage?.totals?.output || 0} · 估算 ¥${Number(d.usage?.totals?.cost || 0).toFixed(3)}</div>
+    <div style="margin-top:4px">归档：${fmtBytes(d.extensions?.archive?.bytes || 0)} · 队列 ${d.extensions?.archive?.queued || 0}；日记 ${d.extensions?.diary?.length || 0} 天</div>`;
+  const top = d.chats.slice(0, 6).map((c) => `<tr><td class="mono">${esc(c.key)}</td><td>${esc(c.name || '')}</td><td>${c.unread ? `<span class="tag warn">${c.unread} 未读</span>` : '<span class="tag ok">已读</span>'}</td><td>${esc(c.wakeText || '')}</td><td class="muted">${c.diary || '—'}</td></tr>`).join('');
+  document.getElementById('overview-chats').innerHTML = top ? `<table><thead><tr><th>会话</th><th>名字</th><th>状态</th><th>唤醒</th><th>日记</th></tr></thead><tbody>${top}</tbody></table>` : '<div class="empty">暂无会话</div>';
+}
+
+function renderChats() {
+  const d = state.data; if (!d) return;
+  const area = document.getElementById('chat-area');
+  if (!d.chats.length) { area.innerHTML = '<div class="empty">暂无会话。让群友发一条消息试试。</div>'; return; }
+  const rows = d.chats.map((c) => {
+    const mode = c.wake?.mode || 'auto';
+    return `<tr>
+      <td><div class="mono">${esc(c.key)}</div><div class="sub">${esc(c.name || '')}</div></td>
+      <td>${c.unread ? `<span class="tag warn">${c.unread} 未读</span>` : '<span class="tag ok">已读</span>'} ${c.running ? '<span class="tag">思考中</span>' : ''}</td>
+      <td><span class="tag ${c.social?.state === 'cooling' ? 'warn' : c.social?.state === 'active' ? 'ok' : ''}">${socialLabel(c.social?.state)}</span></td>
+      <td><select data-key="${esc(c.key)}" class="wake-mode">${['active','auto','diving','muted'].map(m => `<option value="${m}" ${m === mode ? 'selected' : ''}>${({active:'活跃',auto:'随机',diving:'潜水',muted:'静默'})[m]}</option>`).join('')}</select></td>
+      <td class="mono">${esc(c.sessionId)}</td>
+      <td><div class="row"><button data-act="detail" data-key="${esc(c.key)}">消息</button><button data-act="test" data-key="${esc(c.key)}">测试</button><button data-act="reset" data-key="${esc(c.key)}" class="danger">重置</button></div></td>
+    </tr>`;
+  }).join('');
+  area.innerHTML = `<table><thead><tr><th>会话</th><th>状态</th><th>社交</th><th>唤醒</th><th>DSH 会话</th><th>操作</th></tr></thead><tbody>${rows}</tbody></table><div id="chat-detail"></div>`;
+  area.querySelectorAll('.wake-mode').forEach((el) => el.addEventListener('change', async () => {
+    try { await rpc('chat.set_wake', { key: el.dataset.key, config: { mode: el.value } }); await refresh(); } catch (e) { alert(e.message); }
+  }));
+  area.querySelectorAll('button[data-act]').forEach((el) => el.addEventListener('click', () => onChatAction(el.dataset.act, el.dataset.key)));
+}
+
+async function onChatAction(act, key) {
+  const chat = state.data?.chats?.find((c) => c.key === key);
+  if (!chat) return;
+  if (act === 'detail') {
+    const th = chat.thinking;
+    const thinking = th ? `<div class="think ${th.grudge ? 'grudge' : ''}">
+      <div class="top"><span class="tag ${th.grudge ? 'bad' : ''}">${esc(th.trigger || '')}</span><span class="muted">${new Date(th.at).toLocaleString()}</span></div>
+      ${th.reasoning ? `<div class="muted">模型推理</div><pre>${esc(th.reasoning)}</pre>` : ''}
+      <div class="muted">决策轨迹</div><pre>${esc(th.trace || th.text || '')}</pre>
+    </div>` : '';
+    document.getElementById('chat-detail').innerHTML = `${thinking}<div class="msgs">${(chat.messages || []).map((m) => `<div class="msg ${m.self ? 'self' : ''}"><span class="who">${esc(m.nickname)} ${fmtTime(m.time)}</span>${esc(m.text || '[媒体]')}${m.voiceText ? `<div class="muted">语音：${esc(m.voiceText)}</div>` : ''}</div>`).join('') || '<div class="empty">暂无消息</div>'}</div>`;
+    return;
+  }
+  if (act === 'test') {
+    const text = prompt('要发送的测试消息：', '在吗'); if (!text) return;
+    try { await rpc('chat.send_test', { key, text }); await refresh(); } catch (e) { alert(e.message); }
+    return;
+  }
+  if (act === 'reset') {
+    if (!confirm('重置这个会话的 DSH 上下文？下一条消息会开新会话。')) return;
+    try { await rpc('session.reset', { token: chat.token }); await refresh(); } catch (e) { alert(e.message); }
+  }
+}
+
+function wlList(ids, kind) {
+  if (!ids.length) return '<div class="empty">暂无</div>';
+  return `<table><tbody>${ids.map((id) => `<tr><td class="mono">${esc(id)}</td><td style="text-align:right"><button class="danger" data-wl-remove="${esc(kind)}" data-wl-id="${esc(id)}">移除</button></td></tr>`).join('')}</tbody></table>`;
+}
+
+async function renderWhitelist(force = false) {
+  if (!state.whitelist || force) {
+    try { state.whitelist = await rpc('whitelist.get'); }
+    catch (e) { document.getElementById('wl-groups').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  }
+  const w = state.whitelist;
+  document.getElementById('wl-owner').textContent = w.ownerQQ || '未设置';
+  document.getElementById('wl-group-count').textContent = w.allow.groups.length;
+  document.getElementById('wl-private-count').textContent = w.allow.private.length;
+  document.getElementById('wl-empty').textContent = w.allowAllWhenEmpty ? '全部放行' : '默认拒绝';
+  document.getElementById('wl-empty').className = 'value ' + (w.allowAllWhenEmpty ? 'bad' : 'good');
+  document.getElementById('wl-groups').innerHTML = wlList(w.allow.groups, 'group');
+  document.getElementById('wl-privates').innerHTML = wlList(w.allow.private, 'private');
+}
+
+async function addWhitelist(kind) {
+  const input = document.getElementById(kind === 'group' ? 'wl-group-input' : 'wl-private-input');
+  const id = (input.value || '').trim();
+  if (!id) { input.focus(); return; }
+  try {
+    await rpc('whitelist.add', { kind, id });
+    input.value = '';
+    await renderWhitelist(true);
+    await refresh();
+  } catch (e) { alert(e.message); }
+}
+
+async function removeWhitelist(kind, id) {
+  if (!confirm(`从白名单移除 ${kind === 'group' ? '群' : '私聊'} ${id}？`)) return;
+  try {
+    await rpc('whitelist.remove', { kind, id });
+    await renderWhitelist(true);
+    await refresh();
+  } catch (e) { alert(e.message); }
+}
+
+async function renderPersona(force = false) {
+  if (!state.prompts || force) state.prompts = await rpc('prompts.get');
+  document.getElementById('prompt-role').value = state.prompts.roleCard || '';
+  document.getElementById('prompt-sim').value = state.prompts.simulation || '';
+  document.getElementById('prompt-system').value = state.prompts.system || '';
+}
+
+async function savePrompt(file) {
+  const map = { 'role-card.md': 'prompt-role', 'simulation.md': 'prompt-sim', 'system.md': 'prompt-system' };
+  const content = document.getElementById(map[file]).value;
+  if (!confirm('保存后会自动重生成 AGENTS.md/patch，并重置所有 DSH 会话（上下文会重新开始）。继续？')) return;
+  try {
+    const res = await rpc('prompts.set', { file, content });
+    alert(`已保存 ${file}，重置 ${res.reset} 个会话。`);
+    state.prompts = null;
+    await renderPersona(true);
+    await refresh();
+  } catch (e) { alert(e.message); }
+}
+
+async function renderCost() {
+  try {
+    state.usage = await rpc('usage.detail');
+  } catch { return; }
+  const u = state.usage;
+  document.getElementById('cost-total').textContent = '¥' + Number(u.totals?.cost || 0).toFixed(3);
+  document.getElementById('cost-today').textContent = '¥' + Number(u.today || 0).toFixed(3);
+  document.getElementById('cost-turns').textContent = u.totals?.turns || 0;
+  document.getElementById('cost-hit').textContent = (u.totals?.cacheRead || 0).toLocaleString();
+  const chart = document.getElementById('cost-chart');
+  const now = Date.now();
+  const buckets = Array.from({ length: 24 }, (_, i) => ({ start: now - (23 - i) * 3600000, cost: 0 }));
+  for (const ev of u.events || []) {
+    const idx = Math.floor((ev.ts - buckets[0].start) / 3600000);
+    if (idx >= 0 && idx < 24) buckets[idx].cost += ev.cost || 0;
+  }
+  const max = Math.max(0.0001, ...buckets.map(b => b.cost));
+  chart.innerHTML = buckets.map((b, i) => `<div class="bar" style="height:${Math.max(2, (b.cost / max) * 130)}px" title="${new Date(b.start).toLocaleString()} ¥${b.cost.toFixed(4)}"><span>${i % 4 === 0 ? fmtTime(b.start) : ''}</span></div>`).join('');
+  const rows = Object.entries(u.chats || {}).sort((a, b) => (b[1].cost || 0) - (a[1].cost || 0)).map(([key, c]) => `<tr><td class="mono">${esc(key)}</td><td>${c.turns || 0}</td><td>${(c.input || 0).toLocaleString()}</td><td>${(c.cacheRead || 0).toLocaleString()}</td><td>${(c.output || 0).toLocaleString()}</td><td>¥${Number(c.cost || 0).toFixed(3)}</td></tr>`).join('');
+  document.getElementById('cost-chats').innerHTML = rows ? `<table><thead><tr><th>会话</th><th>回合</th><th>输入</th><th>命中</th><th>输出</th><th>估算</th></tr></thead><tbody>${rows}</tbody></table>` : '<div class="empty">还没有用量记录</div>';
+}
+
+async function renderAudit() {
+  try { state.audit = await rpc('audit.list', { limit: 100 }); } catch { return; }
+  const rows = (state.audit.entries || []).map((e) => `<tr><td class="mono">${fmtTime(e.ts)}</td><td class="mono">${esc(e.tool)}</td><td>${e.ok ? '<span class="tag ok">ok</span>' : '<span class="tag bad">fail</span>'}</td><td>${e.ms || 0}ms</td><td class="mono muted">${esc(e.error || e.params || '')}</td></tr>`).join('');
+  document.getElementById('audit-area').innerHTML = rows ? `<table><thead><tr><th>时间</th><th>工具</th><th>结果</th><th>耗时</th><th>参数 / 错误</th></tr></thead><tbody>${rows}</tbody></table>` : '<div class="empty">暂无记录</div>';
+}
+
+async function renderExt() {
+  const d = state.data; if (!d) return;
+  const st = d.extensions?.stickers || { total: 0, recognized: 0, web: 0, disabled: 0 };
+  let stickerItems = [];
+  try { stickerItems = (await rpc('sticker.list', { limit: 200 })).items || []; } catch { /* ignore */ }
+  const stickerRows = stickerItems.map((x) => `<tr>
+      <td class="mono">${esc(x.id)}</td>
+      <td>${esc(x.desc || x.note || '未识别')}</td>
+      <td class="muted">${esc((x.tags || []).join(' / '))}</td>
+      <td>${x.disabled ? '<span class="bad">已拉黑</span>' : '<span class="good">正常</span>'}</td>
+      <td><button data-sticker="${esc(x.id)}" data-disable="${x.disabled ? '0' : '1'}">${x.disabled ? '恢复' : '拉黑'}</button></td>
+    </tr>`).join('');
+  document.getElementById('ext-stickers').innerHTML = `
+    <div class="detail"><div class="kv"><span>总数</span><span>${st.total} 张（已识别 ${st.recognized}，网上 ${st.web}，已拉黑 ${st.disabled || 0}）</span></div></div>
+    ${stickerItems.length ? `<table><thead><tr><th>id</th><th>画面</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody>${stickerRows}</tbody></table>` : '<div class="empty">还没有表情包；等群友发表情或点“立即冲浪”</div>'}`;
+  const av = d.extensions?.avatar;
+  document.getElementById('ext-avatar').innerHTML = av
+    ? `<div class="detail"><div class="kv"><span>当前</span><span class="mono">${esc(av.file || '')}</span></div><div class="kv"><span>理由</span><span>${esc(av.reason || '')}</span></div><div class="kv"><span>设置</span><span class="${av.set ? 'good' : 'bad'}">${av.set ? '成功' : '接口不支持，已保存'}</span></div><div class="kv"><span>时间</span><span>${av.at ? new Date(av.at).toLocaleString() : '—'}</span></div></div>`
+    : '<div class="empty">还没有自动换过头像</div>';
+  const relRows = d.chats.map((c) => {
+    const top = (c.relations?.top || []).map((u) => `${esc(u.name)} ${u.affinity > 0 ? '+' : ''}${u.affinity}`).join('、');
+    return `<tr><td class="mono">${esc(c.key)}</td><td>${c.relations?.count || 0}</td><td>${top || '<span class="muted">—</span>'}</td></tr>`;
+  }).join('');
+  document.getElementById('ext-relations').innerHTML = relRows ? `<table><thead><tr><th>会话</th><th>人数</th><th>好感靠前</th></tr></thead><tbody>${relRows}</tbody></table>` : '<div class="empty">暂无</div>';
+  try { state.diary = await rpc('diary.list'); } catch { state.diary = { list: [] }; }
+  const diaryRows = (state.diary.list || []).map((x) => `<div class="kv"><span>${esc(x.date)}</span><span class="muted">${x.chats} 个会话 · ${esc(x.file)}</span></div>`).join('');
+  document.getElementById('ext-diary').innerHTML = diaryRows || '<div class="empty">还没有日记；默认每天 23:30 生成</div>';
+  const archRows = d.chats.map((c) => `<tr><td class="mono">${esc(c.key)}</td><td>${c.archive?.total || 0}</td><td>${fmtBytes(c.archive?.bytes || 0)}</td><td class="muted mono">${esc(c.archive?.dir || '')}</td></tr>`).join('');
+  document.getElementById('ext-archive').innerHTML = archRows ? `<table><thead><tr><th>会话</th><th>文件数</th><th>占用</th><th>目录</th></tr></thead><tbody>${archRows}</tbody></table>` : '<div class="empty">暂无</div>';
+}
+
+function socialLabel(state) {
+  return ({ diving: '潜水', cooling: '冷却', active: '活跃', watching: '观察' })[state] || (state || '—');
+}
+
+function renderThinking() {
+  const d = state.data; if (!d) return;
+  const filter = document.getElementById('thinking-filter')?.value || 'all';
+  const live = (d.chats || []).flatMap((c) => (c.thinking?.live ? [{ ...c.thinking, chat: c.key }] : []));
+  let list = [...live, ...(d.extensions?.thinkings || []).slice().reverse()];
+  if (filter === 'grudge') list = list.filter((t) => t.grudge);
+  if (filter === 'auto') list = list.filter((t) => t.autoJoin);
+  const area = document.getElementById('thinking-area');
+  area.innerHTML = list.length ? list.map((t) => `<div class="think ${t.grudge ? 'grudge' : ''}">
+    <div class="top">
+      <span class="tag">${esc(t.chat)}</span>
+      <span class="tag ${t.grudge ? 'bad' : t.autoJoin ? 'warn' : ''}">${esc(t.trigger || '')}</span>
+      <span class="muted">${new Date(t.at).toLocaleString()} · ${Math.round((t.durationMs || 0) / 1000)}s</span>
+    </div>
+    ${t.reasoning ? `<div class="muted">模型推理</div><pre>${esc(t.reasoning)}</pre>` : ''}
+    <div class="muted">决策轨迹</div><pre>${esc(t.trace || t.text || '（本轮没有记录）')}</pre>
+  </div>`).join('') : '<div class="empty">没有匹配的思考记录</div>';
+}
+
+function renderLogs() {
+  const d = state.data; if (!d) return;
+  const logs = document.getElementById('logs');
+  logs.innerHTML = (d.logs || []).slice().reverse().map((l) => `<div class="${l.level}">${esc(l.text)}</div>`).join('') || '<div>暂无日志</div>';
+}
+
+async function refresh() {
+  try {
+    state.data = await rpc('status');
+    renderOverview();
+    if (state.tab === 'chats') renderChats();
+    if (state.tab === 'logs') renderLogs();
+    if (state.tab === 'cost') await renderCost();
+    if (state.tab === 'audit') await renderAudit();
+    if (state.tab === 'ext') await renderExt();
+    if (state.tab === 'persona' && !state.prompts) await renderPersona();
+  } catch (e) {
+    document.getElementById('pill-snow').textContent = '无法连接桥接';
+    document.getElementById('pill-snow').className = 'pill bad';
+  }
+}
+
+function switchTab(tab) {
+  state.tab = tab;
+  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tabpane').forEach((p) => p.classList.toggle('active', p.id === 'tab-' + tab));
+  if (tab === 'chats') renderChats();
+  if (tab === 'persona') renderPersona();
+  if (tab === 'cost') renderCost();
+  if (tab === 'audit') renderAudit();
+  if (tab === 'whitelist') renderWhitelist(true);
+  if (tab === 'thinking') renderThinking();
+  if (tab === 'ext') renderExt();
+  if (tab === 'logs') renderLogs();
+}
+
+document.getElementById('tabs').addEventListener('click', (e) => { const b = e.target.closest('button[data-tab]'); if (b) switchTab(b.dataset.tab); });
+document.getElementById('btn-refresh').addEventListener('click', refresh);
+document.getElementById('persona-reload').addEventListener('click', () => renderPersona(true));
+document.getElementById('thinking-filter').addEventListener('change', renderThinking);
+document.querySelectorAll('button[data-save]').forEach((b) => b.addEventListener('click', () => savePrompt(b.dataset.save)));
+document.getElementById('sticker-hunt').addEventListener('click', async () => {
+  try { const r = await rpc('sticker.hunt'); alert(`冲浪完成，库内共 ${r.stats?.total || 0} 张`); await refresh(); await renderExt(); }
+  catch (e) { alert(e.message); }
+});
+document.getElementById('ext-stickers').addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-sticker]');
+  if (!button) return;
+  const disable = button.dataset.disable === '1';
+  try {
+    await rpc(disable ? 'sticker.disable' : 'sticker.enable', { id: button.dataset.sticker });
+    await refresh();
+    await renderExt();
+  } catch (e) { alert(`操作失败：${e.message}`); }
+});
+document.getElementById('avatar-change').addEventListener('click', async () => {
+  if (!confirm('现在上网找一张头像并尝试设置？')) return;
+  try { const r = await rpc('avatar.change'); alert(r ? `已选：${r.reason || ''}
+${r.set ? '设置成功' : '接口不支持，图已保存'}` : '没有结果'); await refresh(); await renderExt(); }
+  catch (e) { alert(e.message); }
+});
+document.getElementById('wl-group-add').addEventListener('click', () => addWhitelist('group'));
+document.getElementById('wl-private-add').addEventListener('click', () => addWhitelist('private'));
+document.getElementById('wl-group-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') addWhitelist('group'); });
+document.getElementById('wl-private-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') addWhitelist('private'); });
+document.getElementById('tab-whitelist').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-wl-remove]');
+  if (b) removeWhitelist(b.dataset.wlRemove, b.dataset.wlId);
+});
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+{
+  "bridge": {
+    "host": "127.0.0.1",
+    "port": 3210,
+    "token": ""
+  },
+  "snowluma": {
+    "httpUrl": "http://127.0.0.1:3000",
+    "wsUrl": "ws://127.0.0.1:3001",
+    "accessToken": "",
+    "httpToken": "",
+    "wsToken": "",
+    "authPrefix": "Bearer",
+    "headers": {},
+    "reconnectMinMs": 1000,
+    "reconnectMaxMs": 30000
+  },
+  "dsh": {
+    "command": "",
+    "profile": "sdk",
+    "patch": "",
+    "workspace": "",
+    "provider": "deepseek-official",
+    "model": "deepseek-flash",
+    "reasoningEffort": "low",
+    "maxTokens": 4096,
+    "turnTimeoutMs": 900000,
+    "startupTimeoutMs": 120000
+  },
+  "qq": {
+    "ownerQQ": null,
+    "allow": {
+      "private": [],
+      "groups": []
+    },
+    "deny": {
+      "private": [],
+      "groups": []
+    },
+    "allowAllWhenEmpty": false,
+    "ignoreSelf": true,
+    "ackMessage": ""
+  },
+  "chat": {
+    "batchWindowMs": 5000,
+    "maxBatchMessages": 30,
+    "maxReplyChars": 500,
+    "sendGapMs": 700,
+    "sendGapPerCharMs": 8,
+    "burstMaxMessages": 8,
+    "historySize": 120
+  },
+  "wake": {
+    "defaultMode": "auto",
+    "defaultProbability": 0.08,
+    "cooldownMs": 45000,
+    "maxPerMinute": 1,
+    "maxPerHour": 12,
+    "keywords": [
+      "小鲸鱼",
+      "DeepSeek",
+      "deepseek",
+      "DS",
+      "D老师",
+      "d老师",
+      "D指导",
+      "d指导",
+      "DeepSeek娘",
+      "深度求索",
+      "大肥鱼",
+      "鲸鱼"
+    ],
+    "nameMention": true,
+    "questionMention": false,
+    "grudgeKeywords": [
+      "大肥鱼",
+      "肥鱼",
+      "胖鱼",
+      "蓝色大肥鱼",
+      "肥鲶鱼"
+    ],
+    "grudgeCooldownMs": 8000,
+    "autoState": true,
+    "hotWindowMs": 90000,
+    "hotMessageCount": 4,
+    "joinProbability": 0.35,
+    "coolingMs": 120000
+  },
+  "admin": {
+    "enabled": true,
+    "protectAdmins": true,
+    "protectOwner": true,
+    "minMuteSeconds": 60,
+    "maxMuteSeconds": 86400,
+    "defaultMuteSeconds": 600,
+    "autoSelfRecall": {
+      "enabled": true,
+      "maxChars": 300,
+      "phrases": [
+        "首先",
+        "其次",
+        "综上所述",
+        "总而言之",
+        "希望对你有帮助",
+        "有什么可以帮",
+        "随时找我",
+        "作为AI",
+        "作为一个语言模型",
+        "这是个好问题",
+        "我理解你的感受",
+        "记得",
+        "一定要",
+        "加油！"
+      ]
+    },
+    "hostileHint": true,
+    "hostileCooldownMs": 300000
+  },
+  "balance": {
+    "enabled": true,
+    "usageFile": ""
+  },
+  "avatar": {
+    "enabled": true,
+    "maxImages": 6,
+    "maxBytes": 8388608,
+    "autoChange": {
+      "enabled": true,
+      "intervalHours": 24,
+      "initialDelayMs": 1800000,
+      "count": 4,
+      "useVision": true,
+      "notifyOwner": true,
+      "queries": [
+        "DeepSeek 小鲸鱼 蓝色 头发 头像",
+        "鲸鱼娘 蓝发 Q版 头像",
+        "蓝色大肥鱼 鲸鱼 头像",
+        "DeepSeek 鲸鱼 二次元 头像"
+      ]
+    }
+  },
+  "slang": {
+    "enabled": true,
+    "minCount": 2,
+    "maxInject": 8,
+    "maxEntries": 800,
+    "autoLearn": {
+      "enabled": true,
+      "intervalHours": 12,
+      "limit": 4
+    }
+  },
+  "web": {
+    "searchEngine": "bing",
+    "timeoutMs": 15000,
+    "maxBytes": 2097152,
+    "maxTextChars": 8000,
+    "readMaxChars": 12000
+  },
+  "forward": {
+    "autoExpand": true,
+    "maxChars": 900,
+    "maxDepth": 2
+  },
+  "proactive": {
+    "enabled": true,
+    "idleThresholdMs": 2700000,
+    "checkIntervalMs": 60000,
+    "probability": 0.2,
+    "minGapMs": 7200000
+  },
+  "relations": {
+    "enabled": true,
+    "maxUsers": 300
+  },
+  "voice": {
+    "enabled": true,
+    "provider": "auto",
+    "language": "zh-CN",
+    "autoTranscribe": true,
+    "ffmpegPath": "ffmpeg",
+    "command": "",
+    "args": [],
+    "timeoutMs": 60000,
+    "maxBytes": 20971520,
+    "apiUrl": "",
+    "apiKey": "",
+    "model": "whisper-1"
+  },
+  "archive": {
+    "enabled": true,
+    "images": true,
+    "files": true,
+    "maxBytes": 10485760,
+    "maxPerDay": 200,
+    "dir": "state/archive"
+  },
+  "diary": {
+    "enabled": true,
+    "hour": 23,
+    "minute": 30,
+    "sendToOwner": true,
+    "maxMessages": 200
+  },
+  "console": {
+    "enabled": true,
+    "showReasoning": true,
+    "reasoningMaxChars": 4000
+  },
+  "pricing": {
+    "currency": "CNY",
+    "cacheHitPerM": 0.5,
+    "cacheMissPerM": 2,
+    "outputPerM": 8
+  },
+  "sticker": {
+    "enabled": true,
+    "autoCollect": true,
+    "autoRecognize": true,
+    "maxRecognizePerHour": 6,
+    "autoSend": true,
+    "attachProbability": 0.45,
+    "grudgeProbability": 0.75,
+    "minGapMs": 45000,
+    "maxPerHour": 10,
+    "maxItems": 300,
+    "hunt": {
+      "enabled": true,
+      "intervalHours": 12,
+      "count": 3,
+      "queries": [
+        "可爱 表情包 鲸鱼",
+        "DeepSeek 小鲸鱼 表情包",
+        "蓝色大肥鱼 表情包",
+        "猫猫 无语 表情包",
+        "二次元 表情包 点赞"
+      ]
+    }
+  },
+  "owner": {
+    "agentMode": true,
+    "groupCommands": true,
+    "groupCommandPrefix": "#",
+    "profile": "sdk",
+    "patch": "",
+    "workspace": "workspace-owner",
+    "provider": "",
+    "model": "",
+    "reasoningEffort": "",
+    "maxTokens": 0
+  },
+  "music": {
+    "enabled": true,
+    "maxBytes": 15728640,
+    "maxDurationSec": 600,
+    "timeoutMs": 20000,
+    "downloadTimeoutMs": 180000,
+    "sendAsVoice": true,
+    "providerOrder": ["local", "plugin", "qq", "netease"],
+    "plugin": true,
+    "pluginPath": "",
+    "localDirs": [],
+    "localScanMaxFiles": 2000,
+    "localIndexMinutes": 10
+  },
+  "video": {
+    "enabled": true,
+    "maxBytes": 62914560,
+    "maxDurationSec": 600,
+    "maxHeight": 720,
+    "timeoutMs": 300000,
+    "searchTimeoutMs": 60000,
+    "dir": ""
+  },
+  "profile": {
+    "nicknameChangeCooldownMs": 3600000,
+    "maxNicknameLength": 20
+  }
+}
